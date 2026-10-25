@@ -1,0 +1,66 @@
+# Cell Bench: Implementation Report
+
+This report will focus on two time periods where Cell Bench can be used. We will Answer:
+
+1. How Cell Bench adheres to and subsequently can be implemented as part of the Government's 10 Year Health Plan.
+2. How we could implement Cell bench today, given current constraints.
+
+## Cell Bench and The 10 Year Health Plan
+
+*(will refers to chapters 8 and 3 of the document, view sources)*
+
+The NHS is moving towards an AI-driven future, given that by 2035, "AI will be seamlessly integrated into most clinical pathways". In order for this to happen, the NHS "will invest in AI infrastructure". This will be done through both technical and regulatory lenses.
+
+In terms of data and client info, the NHS's solution for this is the SPR – Single Patient Record, bringing "all a patient's medical records into one place" allowing for interoperability.
+
+Regulation wise, the plan to build a "streamlined regulatory environment" with reforms to the legal framework for how health data can be used in research, will support entrepreneurs and scientists to deliver highest quality applications to Clinicians, with reduced bureaucracy and efficient resource allocation.
+
+### What does this mean for Cell Bench?
+
+Access to wider centralized data sets, and compute infrastructure, allows:
+
+- **Model is trained on larger complete datasets, this improves:**
+  - Disease detection accuracy,
+  - System performance
+  - Reliability of results
+
+  This means that disease probabilities given to clinicians in our proposed updated report are of the best quality.
+
+- **Improved synthetic data generation**
+  - A subset of the project undertook synthetic data generation, with more data, synthetic data sets would be of higher quality.
+  - Larger synthetic data sets would benefit Students/Researchers, testing new ideas with ease and accuracy, collectively expanding AI in Healthcare ecosystem. Cementing the UK as a pioneer in being a merger of both industries.
+
+- Integrate other clinical data sources such as imaging to enrich models, finding links between data streams. This helps build more all encompassing disease detection algorithms with higher accuracy!
+
+- **NHS trusted researchers having access to cell bench:**
+  - Can follow up on diseases they are currently working, trusting the data that is being fed into the model.
+
+### Regulatory and Legal Reform supports CellBench
+
+- Ensuring the collection of per-cell data complies with regulations, with less friction. While protecting patient privacy
+- Check eligibility for government programs: Airlock regulatory programme
+- Responsible synthetic data: generate realistic cohorts with checks for re-identification risk and bias.
+- Validation across Trusts: test reliability across different patient populations and analysers.
+- Safe clinical adoption: clarify the evidence and safety requirements needed before supporting patient care.
+
+## Cell bench today
+
+Our plan on how Cell Bench could be implemented with current state of NHS, both clinicians and researchers.
+
+Currently UK health data is split among Trusts. Our approach would to be to team up with trusts, run local models directly on their data which have been trained on high quality synthetic data based on complete reports and per-cell data collected from the Sysmex machines. While keeping identifiable source data within the Trust’s controlled environment. This removes the limitation of not finding full blood reports in our project.
+
+Although synthetic data sets are more reliable, this is no match to larger datasets which a single trust does not provide.
+
+Handling Direct Patient health data brings up regulatory concerns, we must ensure that the application, either clinical or in research adheres to the laws put in place by the ICO. Our compliance framework would change depending on whether models are used by clinicians or scientific research (GDPR Bases). Health data is classed as Special Category Data, meaning 2 conditions in GDPR compliance must be met along with additional adherence to the DPA and other requirements depending on pathway.
+
+| Compliance requirement | Pathway A: Individual clinical care | Pathway B: Scientific research |
+| --- | --- | --- |
+| Purpose | Supporting diagnosis or treatment of an individual patient. | Developing or evaluating models and investigating disease signals. |
+| UK GDPR Compliance | For an NHS Trust, typically Article 6(1)(e): public task + Article 9(2)(h): health care, with applicable DPA 2018 conditions. | Typically Article 6(1)(e): public task, or 6(1)(f): legitimate interests where appropriate, + Article 9(2)(j): scientific research, with applicable DPA 2018 conditions and research safeguards. |
+| Common law confidentiality | Implied consent may apply to necessary processing for the patient’s direct care, where relevant conditions are met. | For confidential patient information, normally explicit consent or an applicable legal gateway, such as section 251 support following CAG advice. |
+| National Data Opt-Out (England) | Does not apply to the individual’s direct care. | Apply where in scope; exceptions include specific explicit consent and effectively anonymised data. |
+| Data governance | Document responsibilities, transparency, minimisation, security, access controls and retention; complete a DPIA where required. | Same requirements, plus applicable Article 89 research safeguards. |
+
+## Sources
+
+DHSC, PMO – [Fit for the future: 10 Year Health Plan for England](https://www.gov.uk/government/publications/10-year-health-plan-for-england-fit-for-the-future/fit-for-the-future-10-year-health-plan-for-england-accessible-version)
