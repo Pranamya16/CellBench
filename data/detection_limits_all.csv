@@ -1,0 +1,41 @@
+noise,type,drop,view,limit
+shared,spread,10%,"Report summary, MLP",not reached
+shared,spread,10%,"Report summary, CNN",not reached
+shared,spread,10%,"Rich summary, MLP",10%
+shared,spread,10%,"Full per-cell maps, MLP",not reached
+shared,spread,10%,"Full per-cell maps, CNN",10%
+shared,subgroup,5%,"Report summary, MLP",not reached
+shared,subgroup,5%,"Report summary, CNN",not reached
+shared,subgroup,5%,"Rich summary, MLP",not reached
+shared,subgroup,5%,"Full per-cell maps, MLP",not reached
+shared,subgroup,5%,"Full per-cell maps, CNN",not reached
+shared,subgroup,10%,"Report summary, MLP",not reached
+shared,subgroup,10%,"Report summary, CNN",not reached
+shared,subgroup,10%,"Rich summary, MLP",10%
+shared,subgroup,10%,"Full per-cell maps, MLP",20%
+shared,subgroup,10%,"Full per-cell maps, CNN",5%
+shared,subgroup,20%,"Report summary, MLP",10%
+shared,subgroup,20%,"Report summary, CNN",10%
+shared,subgroup,20%,"Rich summary, MLP",2%
+shared,subgroup,20%,"Full per-cell maps, MLP",5%
+shared,subgroup,20%,"Full per-cell maps, CNN",2%
+independent,spread,10%,"Report summary, MLP",not reached
+independent,spread,10%,"Report summary, CNN",not reached
+independent,spread,10%,"Rich summary, MLP",20%
+independent,spread,10%,"Full per-cell maps, MLP",not reached
+independent,spread,10%,"Full per-cell maps, CNN",10%
+independent,subgroup,5%,"Report summary, MLP",not reached
+independent,subgroup,5%,"Report summary, CNN",not reached
+independent,subgroup,5%,"Rich summary, MLP",not reached
+independent,subgroup,5%,"Full per-cell maps, MLP",not reached
+independent,subgroup,5%,"Full per-cell maps, CNN",not reached
+independent,subgroup,10%,"Report summary, MLP",not reached
+independent,subgroup,10%,"Report summary, CNN",not reached
+independent,subgroup,10%,"Rich summary, MLP",20%
+independent,subgroup,10%,"Full per-cell maps, MLP",not reached
+independent,subgroup,10%,"Full per-cell maps, CNN",10%
+independent,subgroup,20%,"Report summary, MLP",20%
+independent,subgroup,20%,"Report summary, CNN",20%
+independent,subgroup,20%,"Rich summary, MLP",5%
+independent,subgroup,20%,"Full per-cell maps, MLP",5%
+independent,subgroup,20%,"Full per-cell maps, CNN",2%

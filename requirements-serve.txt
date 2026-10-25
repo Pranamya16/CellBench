@@ -1,0 +1,11 @@
+# Runtime packages for the live demo server (the Docker image installs these).
+# Pinned to the versions the weights were checked with locally. Qwen is not in this list: it runs in Ollama on the host.
+numpy==2.0.2
+pandas==2.3.3
+scipy==1.13.1
+scikit-learn==1.6.1
+joblib==1.5.3
+torch==2.8.0
+fastapi==0.128.8
+uvicorn==0.39.0
+httpx==0.28.1

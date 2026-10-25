@@ -1,0 +1,416 @@
+<title>CellBench Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: an instrument panel. Controls left, readout right; patient card and limits below.
+   Series colours: full cell data = slot 1, report averages = slot 2, rich summary = slot 3 (validated palette). */
+:root {
+  --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --line: rgba(11,11,11,.10); --wash: #f0efec;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #006300; --warn: #fab219; --crit: #d03b3b; --cell: #b9b8b0;
+  --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --line: rgba(255,255,255,.10); --wash: #232322;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #0ca30c; --cell: #4a4a46; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --line: rgba(255,255,255,.10); --wash: #232322;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #0ca30c; --cell: #4a4a46; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1100px; margin: 0 auto; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; letter-spacing: -.02em; }
+h2 { font-size: 22px; font-weight: 650; letter-spacing: -.01em; }
+h3 { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+p { margin: 0; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 18px; border-bottom: 1px solid var(--line); }
+.brand { font-weight: 700; } .brand span { font-weight: 400; color: var(--ink2); }
+.badge { font-family: var(--mono); font-size: 12px; padding: 4px 10px; border: 1px solid var(--axis); border-radius: 4px; background: var(--wash); }
+.hero { padding-block: 44px 30px; display: grid; gap: 16px; max-width: 780px; }
+.hero p { font-size: 18px; color: var(--ink2); max-width: 64ch; }
+.sec { padding-block: 32px; border-top: 1px solid var(--line); display: grid; gap: 18px; }
+.lead { color: var(--ink2); max-width: 70ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+.app { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 16px; align-items: start; }
+.field { display: grid; gap: 8px; } .field + .field { margin-top: 16px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--axis); border-radius: 7px; overflow: hidden; }
+.seg label { position: relative; } .seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.seg span { display: block; padding: 8px 6px; text-align: center; font-size: 13px; border-left: 1px solid var(--axis); background: var(--surface); }
+.seg label:first-child span { border-left: 0; }
+.seg input:checked + span { background: var(--ink); color: var(--bg); font-weight: 600; }
+.seg input:disabled + span { opacity: .4; cursor: not-allowed; }
+.seg input:focus-visible + span { outline: 2px solid var(--s1); outline-offset: -2px; }
+.hint { font-size: 13px; color: var(--ink2); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; margin-top: 10px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 7px; }
+.chart { position: relative; }
+svg.plot { width: 100%; height: auto; display: block; }
+svg text { font-family: var(--sans); fill: var(--ink2); font-size: 11px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 6px; padding: 8px 10px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.12); display: none; min-width: 190px; z-index: 3; }
+.tip div { display: flex; justify-content: space-between; gap: 14px; } .tip b { font-family: var(--mono); font-weight: 500; }
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 14px; }
+.lim { border-top: 3px solid var(--c); padding-top: 8px; }
+.lim small { display: block; color: var(--ink2); font-size: 12px; } .lim strong { font-size: 24px; font-family: var(--mono); font-weight: 500; }
+.say { margin-top: 12px; font-size: 15px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+select { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.verdicts { display: grid; gap: 8px; margin-top: 12px; }
+.verdict { display: grid; grid-template-columns: 4px 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; background: var(--wash); border-radius: 6px; }
+.verdict .bar { align-self: stretch; border-radius: 2px; background: var(--c); } .verdict em { font-style: normal; font-weight: 600; font-size: 13px; }
+.mono { font-family: var(--mono); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 12px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+canvas { width: 100%; height: auto; aspect-ratio: 1; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.scorebar { display: grid; grid-template-columns: 150px 1fr 56px; gap: 10px; align-items: center; font-size: 13px; }
+.track { height: 12px; border-radius: 6px; background: var(--wash); overflow: hidden; } .fill { height: 100%; border-radius: 6px; }
+.cap { font-size: 12px; color: var(--ink2); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink2); font-weight: 600; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tbl { overflow-x: auto; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink2); }
+footer { padding-block: 28px 40px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2); }
+@media (max-width: 880px) { .app { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .two { grid-template-columns: minmax(0, 1fr); } .scorebar { grid-template-columns: 110px 1fr 48px; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">CellBench <span>detection ruler</span></div>
+    <div class="row"><a class="chip" href="/chat" style="text-decoration:none">Ask the demo</a><div class="badge">Live server · synthetic data · curves from the full sweep (5 seeds)</div></div>
+  </header>
+
+  <section class="hero">
+    <h1>Same model, same patients. Only the data changes.</h1>
+    <p>A blood analyser records every cell, but the lab report keeps averages. We planted a known change in some neutrophils of fake patients, trained the same model on the averages and on every cell, and measured how small a change each could still find.</p>
+  </section>
+
+  <section class="sec" id="ruler">
+    <h2>The ruler</h2>
+    <p class="lead">Each point is the mean score over 5 seeds (bars show the spread between seeds). 0.5 is a coin flip, 1.0 is perfect. The detection limit is the smallest share of changed neutrophils that scores at least 0.80 and stays there.</p>
+    <div class="app">
+      <div class="panel" aria-label="Controls">
+        <div class="field"><h3>Model</h3>
+          <div class="seg"><label><input type="radio" name="fam" value="cnn" checked><span>CNN</span></label><label><input type="radio" name="fam" value="mlp"><span>MLP</span></label></div>
+          <p class="hint" id="famHint"></p></div>
+        <div class="field"><h3>Change planted</h3>
+          <div class="seg"><label><input type="radio" name="type" value="subgroup" checked><span>Subgroup</span></label><label><input type="radio" name="type" value="spread"><span>Spread</span></label><label><input type="radio" name="type" value="shift"><span>Shift</span></label></div>
+          <p class="hint" id="typeHint"></p></div>
+        <div class="field"><h3>Granularity drop (SSC)</h3>
+          <div class="seg"><label><input type="radio" name="drop" value="5"><span>5%</span></label><label><input type="radio" name="drop" value="10"><span>10%</span></label><label><input type="radio" name="drop" value="20" checked><span>20%</span></label></div></div>
+        <div class="field"><h3>Patient-to-patient noise</h3>
+          <div class="seg"><label><input type="radio" name="noise" value="shared" checked><span>Shared</span></label><label><input type="radio" name="noise" value="independent"><span>Independent</span></label></div></div>
+        <div class="field"><label class="check"><input type="checkbox" id="rich"> Also show the rich summary (MLP)</label></div>
+      </div>
+      <div class="panel">
+        <h3>Score against share of neutrophils changed</h3>
+        <div class="legend" id="legend"></div>
+        <div class="chart" id="chart"></div>
+        <div class="limits" id="limits"></div>
+        <p class="say" id="say"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Claim checker</h2>
+    <p class="lead">Someone claims an AI can spot a change like this. Could each kind of data actually see it? Uses the sweep results for the model and noise chosen above.</p>
+    <div class="panel">
+      <div class="row">
+        <select id="cType" aria-label="Change"><option value="subgroup">Subgroup of neutrophils</option><option value="spread">Wider neutrophil cluster</option></select>
+        <select id="cFrac" aria-label="Share changed"><option value="2">2% of neutrophils</option><option value="5">5%</option><option value="10" selected>10%</option><option value="20">20%</option></select>
+        <select id="cDrop" aria-label="Drop"><option value="5">5% SSC drop</option><option value="10" selected>10% SSC drop</option><option value="20">20% SSC drop</option></select>
+      </div>
+      <div class="verdicts" id="verdicts"></div>
+      <p class="cap" style="margin-top:8px">Detected: score 0.80 or more. Borderline: 0.65 to 0.80. Missed: below 0.65.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="patients">
+    <h2>Upload a patient file, score it, hear it explained</h2>
+    <p class="lead">This part is live. Choose a patient cell file (CSV) and the models score <b>that file</b>: they read only its cells and nothing else. Qwen 2.5 then explains the result in plain words. The detector score shows how strongly the cells look like the planted pattern the models were trained on; it is not a diagnosis. The explanation is checked: any number Qwen writes must come from the scores, otherwise a fixed sentence is shown instead.</p>
+    <div class="app">
+      <div class="panel" aria-label="Patient settings">
+        <div class="field"><h3>Your patient file</h3>
+          <input id="lfile" type="file" accept=".csv,.txt,text/csv" aria-label="Cell file" style="font-size:13px;max-width:100%">
+          <div class="row"><button class="chip" id="lup" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink);padding:9px 14px;font-size:14px">Score this file</button><a class="chip" id="lex" href="#" style="text-decoration:none">Download an example file</a></div>
+          <p class="hint">One patient per file. Columns SSC, SFL, FSC, FSCW (0 to 255), one row per cell, at least 500 cells. <b>Synthetic or open data only, no real patient data.</b> Processed in memory and not stored. The models know only simulated patients, so scores for other data are not meaningful.</p></div>
+        <p class="hint" id="lstatus" role="status" style="margin-top:8px"></p><details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">No file? Make a synthetic test patient instead</summary><p class="hint" style="margin:8px 0">These settings are not inputs to the model. They only control how the <b>fake test patient</b> is made (whether a change is planted and how big). When you upload a file, none of them are used.</p><div class="field"><h3>Patient</h3>
+          <div class="seg"><label><input type="radio" name="lsig" value="1" checked><span>Signal</span></label><label><input type="radio" name="lsig" value="0"><span>Normal</span></label></div></div>
+        <div class="field"><h3>Change planted</h3>
+          <div class="seg"><label><input type="radio" name="lkind" value="subgroup" checked><span>Subgroup</span></label><label><input type="radio" name="lkind" value="spread"><span>Spread</span></label><label><input type="radio" name="lkind" value="shift"><span>Shift</span></label></div></div>
+        <div class="field"><h3>Share of neutrophils changed</h3>
+          <div class="seg"><label><input type="radio" name="lfrac" value="2"><span>2%</span></label><label><input type="radio" name="lfrac" value="5"><span>5%</span></label><label><input type="radio" name="lfrac" value="10" checked><span>10%</span></label><label><input type="radio" name="lfrac" value="20"><span>20%</span></label></div></div>
+        <div class="field"><h3>SSC drop</h3>
+          <div class="seg"><label><input type="radio" name="ldrop" value="5"><span>5%</span></label><label><input type="radio" name="ldrop" value="10" checked><span>10%</span></label><label><input type="radio" name="ldrop" value="20"><span>20%</span></label></div></div>
+        <div class="field"><h3>Noise</h3>
+          <div class="seg"><label><input type="radio" name="lnoise" value="shared" checked><span>Shared</span></label><label><input type="radio" name="lnoise" value="independent"><span>Independent</span></label></div></div>
+        <div class="field"><h3>Patient number</h3><div class="row"><input id="lseed" type="number" min="0" max="100000" value="1" style="width:90px;font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--axis);background:var(--surface);color:var(--ink)" aria-label="Patient number"><button class="chip" id="lnext" type="button">Next patient</button></div></div>
+        <div class="field"><button class="chip" id="lgo" type="button">Make and score a test patient</button></div></details>
+      </div>
+      <div class="stack" style="display:grid;gap:16px;min-width:0">
+        <div class="two">
+          <div class="panel"><div class="row" style="justify-content:space-between"><h3>Cell map: SSC against SFL</h3><label class="check"><input type="checkbox" id="lheat" checked> Where the model looked</label></div>
+            <canvas id="lcv" width="560" height="560" style="margin-top:10px" aria-label="Cell map"></canvas><p class="cap" id="lcap" style="margin-top:6px"></p></div>
+          <div class="panel" id="lscore"><h3>Detector scores (0 to 100)</h3><p class="hint" style="margin-top:10px">Choose a patient file, or make a test patient.</p></div>
+        </div>
+        <div class="panel"><h3>In plain words</h3><p id="lexpl" style="margin-top:10px;font-size:16px">&nbsp;</p><p class="cap" id="lsrc" style="margin-top:8px"></p><p style="margin-top:10px"><a class="chip" id="lask" href="/chat" style="text-decoration:none">Ask a question about this patient</a></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="labreport">
+    <h2>What a lab result screen could look like</h2>
+    <p class="lead">A mock-up of a result sheet for the patient above, in the layout and type of a standard analyser result. It is filled from the simulated cells only: the differential and the neutrophil averages are computed from them, and the white-cell total is made up. Red cells, platelets and flags are not simulated, so they are left out. <b>Simulated, synthetic data. Proof of concept. Not a diagnosis.</b></p>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px"><h3>Result sheet (synthetic)</h3><a class="chip" id="repPdf" href="#" target="_blank" rel="noopener" style="text-decoration:none">Download as PDF</a></div>
+      <div id="rep" style="overflow-x:auto;background:#ffffff;border:1px solid var(--line);border-radius:6px"><p class="hint" style="padding:16px;color:#52514e">Generate a patient above to fill in the sheet.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Limits we state up front</h2>
+    <ul class="plain">
+      <li>All patients are synthetic. Cell positions were measured from four public body-fluid files and borrowed for a blood-like mix; the mix, noise and change sizes are assumptions.</li>
+      <li>The ruler shows what is detectable, not that any real disease produces these changes. It is not a diagnostic tool, and the score is a detector score on a 50/50 synthetic mix, not a chance of disease.</li>
+      <li>The report summary is a stand-in built from simulated cells, not a real lab report. A 5% SSC drop was not detectable by any model.</li>
+      <li>Our fake cells leave the key area of the cell map nearly empty, which flatters the full-cell CNN; real data may be harder.</li>
+      <li>The two CNNs share the model family and training recipe, not the exact layers (their inputs differ). Differences under 0.05 are within seed-to-seed noise.</li>
+    </ul>
+  </section>
+  <footer>Leeds AI Society hackathon, 24 to 25 October 2026. Data: synthetic.</footer>
+</div>
+
+<script>
+(function () {
+  var RES = __RES__, LIM = __LIM__;
+  var FAM = {
+    cnn: { report: "cnn_report_auto", cells: "cells_CNN", rl: "Report summary, CNN", cl: "Full per-cell maps, CNN", hint: "CNN on the 3 cell maps vs CNN on the report numbers laid out as a grid." },
+    mlp: { report: "mlp_report_auto", cells: "mlp_cells", rl: "Report summary, MLP", cl: "Full per-cell maps, MLP", hint: "The same small MLP reads the report numbers or the flattened cell maps." }
+  };
+  var TYPE_HINT = { subgroup: "A share of neutrophils becomes less granular (MDS-style hypogranular cells).",
+    spread: "The neutrophil cluster widens; its centre does not move.", shift: "Every neutrophil drops 10% in SSC." };
+  var FR = [2, 5, 10, 20];
+  var st = { fam: "cnn", type: "subgroup", drop: 20, noise: "shared", rich: false };
+  var $ = function (id) { return document.getElementById(id); };
+  function get(model, type, f, d) { return RES[[st.noise, type, f, d, model].join("|")]; }
+  function series() {
+    var F = FAM[st.fam], d = st.type === "spread" ? 10 : st.drop, out = [
+      { name: "Full cell data", key: F.cells, col: "var(--s1)", lim: F.cl },
+      { name: "Report averages", key: F.report, col: "var(--s2)", lim: F.rl }];
+    if (st.rich) out.push({ name: "Rich summary (MLP)", key: "mlp_rich_auto", col: "var(--s3)", lim: "Rich summary, MLP" });
+    out.forEach(function (s) { s.pts = FR.map(function (f) { var v = get(s.key, st.type, f, d); return v ? { f: f, m: v[0], sd: v[1], acc: v[2] } : null; }); });
+    return out;
+  }
+  var W = 640, H = 320, M = { l: 46, r: 20, t: 14, b: 44 };
+  function X(i) { return M.l + (i + 0.5) * (W - M.l - M.r) / FR.length; }
+  function Y(a) { return M.t + (1 - (a - 0.4) / 0.6) * (H - M.t - M.b); }
+  function drawChart() {
+    var s = "", ser = series();
+    [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0].forEach(function (a) {
+      s += '<line x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + Y(a) + '" y2="' + Y(a) + '" stroke="var(--grid)"/>';
+      s += '<text x="' + (M.l - 8) + '" y="' + (Y(a) + 4) + '" text-anchor="end">' + a.toFixed(1) + '</text>';
+    });
+    s += '<line x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + Y(0.5) + '" y2="' + Y(0.5) + '" stroke="var(--axis)" stroke-width="1.5"/>';
+    s += '<text x="' + (W - M.r - 4) + '" y="' + (Y(0.5) - 5) + '" text-anchor="end">coin flip</text>';
+    s += '<line x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + Y(0.8) + '" y2="' + Y(0.8) + '" stroke="var(--muted)" stroke-dasharray="4 4"/>';
+    s += '<text x="' + (W - M.r - 4) + '" y="' + (Y(0.8) - 5) + '" text-anchor="end">detected (0.80)</text>';
+    FR.forEach(function (f, i) { s += '<text x="' + X(i) + '" y="' + (H - M.b + 18) + '" text-anchor="middle">' + f + '%</text>'; });
+    s += '<text x="' + ((M.l + W - M.r) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">Share of neutrophils changed</text>';
+    if (st.type === "shift") {
+      ser.forEach(function (sr, k) {
+        var v = get(sr.key, "shift", 100, 10); if (!v) return;
+        var x = M.l + (k + 1) * (W - M.l - M.r) / (ser.length + 1);
+        s += '<line x1="' + x + '" x2="' + x + '" y1="' + Y(Math.max(0.4, v[0] - v[1])) + '" y2="' + Y(Math.min(1, v[0] + v[1])) + '" stroke="' + sr.col + '" stroke-width="1.5"/>';
+        s += '<circle cx="' + x + '" cy="' + Y(v[0]) + '" r="6" fill="' + sr.col + '" stroke="var(--surface)" stroke-width="2"/>';
+        s += '<text x="' + x + '" y="' + (Y(v[0]) - 12) + '" text-anchor="middle" style="fill:var(--ink)">' + v[0].toFixed(2) + '</text>';
+      });
+      s += '<text x="' + ((M.l + W - M.r) / 2) + '" y="' + (M.t + 14) + '" text-anchor="middle">All neutrophils shifted by 10%: one setting, no fraction axis</text>';
+    } else {
+      ser.forEach(function (sr) {
+        var d = "", first = true;
+        sr.pts.forEach(function (p, i) { if (!p) return; d += (first ? "M" : "L") + X(i) + " " + Y(p.m); first = false; });
+        s += '<path d="' + d + '" fill="none" stroke="' + sr.col + '" stroke-width="2.2" stroke-linejoin="round"/>';
+        sr.pts.forEach(function (p, i) {
+          if (!p) return;
+          s += '<line x1="' + X(i) + '" x2="' + X(i) + '" y1="' + Y(Math.max(0.4, p.m - p.sd)) + '" y2="' + Y(Math.min(1, p.m + p.sd)) + '" stroke="' + sr.col + '" stroke-width="1.2" opacity=".75"/>';
+          s += '<circle cx="' + X(i) + '" cy="' + Y(p.m) + '" r="4.5" fill="' + sr.col + '" stroke="var(--surface)" stroke-width="2"/>';
+        });
+      });
+    }
+    s += '<rect id="hit" x="' + M.l + '" y="' + M.t + '" width="' + (W - M.l - M.r) + '" height="' + (H - M.t - M.b) + '" fill="transparent"/>';
+    $("chart").innerHTML = '<svg class="plot" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Detection curves">' + s + '</svg><div class="tip" id="tip"></div>';
+    $("legend").innerHTML = ser.map(function (sr) { return '<span><i style="background:' + sr.col + '"></i>' + sr.name + '</span>'; }).join("");
+    if (st.type !== "shift") {
+      var svg = $("chart").firstChild, tip = $("tip");
+      $("hit").addEventListener("pointermove", function (ev) {
+        var r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+        var i = Math.max(0, Math.min(FR.length - 1, Math.floor((px - M.l) / ((W - M.l - M.r) / FR.length))));
+        tip.innerHTML = '<div><span>Neutrophils changed</span><b>' + FR[i] + '%</b></div>' + ser.map(function (sr) {
+          var p = sr.pts[i]; return '<div><span>' + sr.name + '</span><b>' + (p ? p.m.toFixed(2) + " ±" + p.sd.toFixed(2) : "–") + '</b></div>';
+        }).join("");
+        tip.style.display = "block";
+        var left = ev.clientX - r.left + 14; if (left + 200 > r.width) left = ev.clientX - r.left - 214;
+        tip.style.left = Math.max(0, left) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - 20) + "px";
+      });
+      $("hit").addEventListener("pointerleave", function () { tip.style.display = "none"; });
+    }
+  }
+  function limitOf(view) {
+    if (st.type === "shift") return null;
+    return LIM[[st.noise, st.type, st.type === "spread" ? 10 : st.drop, view].join("|")];
+  }
+  function drawLimits() {
+    var ser = series();
+    $("limits").innerHTML = st.type === "shift" ? "" : ser.map(function (sr) {
+      return '<div class="lim" style="--c:' + sr.col + '"><small>' + sr.name + ' detects from</small><strong>' + (limitOf(sr.lim) || "–") + '</strong></div>';
+    }).join("");
+    var F = FAM[st.fam], lc = limitOf(F.cl), lr = limitOf(F.rl), txt;
+    if (st.type === "shift") {
+      var a = get(F.cells, "shift", 100, 10), b = get(F.report, "shift", 100, 10);
+      txt = "When every neutrophil shifts, both kinds of data see it (" + a[0].toFixed(2) + " vs " + b[0].toFixed(2) + "). This is the case averages are built for.";
+    } else if (lc === "not reached" && lr === "not reached") {
+      txt = "Neither kind of data reaches 0.80 for this change. It is below the detection limit.";
+    } else if (lr === "not reached") {
+      txt = "Full cell data detects this from " + lc + " of neutrophils changed. Report averages never reach 0.80, even at 20%.";
+    } else {
+      txt = "Full cell data detects this from " + lc + " of neutrophils changed; report averages need " + lr + ".";
+    }
+    $("say").textContent = txt;
+  }
+  function verdict(a) { return a >= 0.8 ? { t: "Detected", c: "var(--good)", i: "✓" } : a >= 0.65 ? { t: "Borderline", c: "var(--warn)", i: "~" } : { t: "Missed", c: "var(--crit)", i: "✕" }; }
+  function drawClaim() {
+    var t = $("cType").value, f = +$("cFrac").value, d = t === "spread" ? 10 : +$("cDrop").value;
+    $("cDrop").disabled = t === "spread";
+    var F = FAM[st.fam], rows = [{ n: "Report averages (" + st.fam.toUpperCase() + ")", k: F.report }, { n: "Full cell data (" + st.fam.toUpperCase() + ")", k: F.cells }];
+    $("verdicts").innerHTML = rows.map(function (r) {
+      var v = get(r.k, t, f, d); if (!v) return "";
+      var x = verdict(v[0]);
+      return '<div class="verdict" style="--c:' + x.c + '"><span class="bar"></span><span>' + r.n + '</span><span><em>' + x.i + " " + x.t + '</em> <span class="mono">' + v[0].toFixed(2) + " · " + Math.round(v[2] * 100) + '% correct</span></span></div>';
+    }).join("");
+  }
+  /* ---------- live patient ---------- */
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  var LP = null;
+  function rv(name) { return document.querySelector('input[name="' + name + '"]:checked').value; }
+  function paintLive() {
+    if (!LP) return;
+    var p = LP, cv = $("lcv"), ctx = cv.getContext("2d"), S = cv.width, pad = 34, sc = (S - pad - 10) / 255;
+    var X0 = function (v) { return pad + v * sc; }, Y0 = function (v) { return S - pad - v * sc; };
+    ctx.clearRect(0, 0, S, S); ctx.fillStyle = css("--surface"); ctx.fillRect(0, 0, S, S);
+    if ($("lheat").checked && p.heat) {
+      var cell = 8 * sc;
+      for (var i = 0; i < 32; i++) for (var j = 0; j < 32; j++) {
+        var v = p.heat[i][j]; if (v < 0.05) continue;
+        ctx.fillStyle = "rgba(208,59,59," + Math.min(0.7, v).toFixed(3) + ")"; ctx.fillRect(X0(i * 8), Y0((j + 1) * 8), cell, cell);
+      }
+    }
+    ctx.strokeStyle = css("--grid"); ctx.fillStyle = css("--ink2"); ctx.font = "18px " + css("--sans");
+    [0, 64, 128, 192, 255].forEach(function (t) { ctx.beginPath(); ctx.moveTo(X0(t), 6); ctx.lineTo(X0(t), S - pad); ctx.moveTo(pad, Y0(t)); ctx.lineTo(S - 6, Y0(t)); ctx.stroke(); ctx.fillText(t, X0(t) - 8, S - 10); ctx.fillText(t, 2, Y0(t) + 6); });
+    p.cells.forEach(function (c) { if (c[3] || c[2]) return; ctx.fillStyle = css("--cell"); ctx.beginPath(); ctx.arc(X0(c[0]), Y0(c[1]), 2.4, 0, 6.2832); ctx.fill(); });
+    p.cells.forEach(function (c) { if (!c[3] || c[2]) return; ctx.fillStyle = css("--s1"); ctx.beginPath(); ctx.arc(X0(c[0]), Y0(c[1]), 2.6, 0, 6.2832); ctx.fill(); });
+    p.cells.forEach(function (c) { if (!c[2]) return; ctx.fillStyle = css("--crit"); ctx.beginPath(); ctx.arc(X0(c[0]), Y0(c[1]), 3.6, 0, 6.2832); ctx.fill(); });
+    ctx.fillStyle = css("--ink2"); ctx.fillText("SSC", S - 52, S - 38); ctx.fillText("SFL", pad + 8, 24);
+    $("lcap").textContent = (p.upload ? "Up to 800 cells of your file. Blue: cells the auto-gate calls neutrophils. No planted cells are known for an uploaded file." : "800 of 2,000 cells. Blue: neutrophils. Red dots: planted less-granular neutrophils (known only because the data is synthetic).") + ($("lheat").checked ? " Red boxes: where the model looked, not why a patient is ill." : "");
+  }
+  function bar(name, v, col) { return '<div class="scorebar"><span>' + name + '</span><div class="track"><div class="fill" style="width:' + Math.round(v * 100) + "%;background:" + col + '"></div></div><b class="mono">' + Math.round(v * 100) + "</b></div>"; }
+  function showScores(p) {
+    var truth = p.upload ? "Uploaded file " + p.name + " (" + p.lab.events + " cells). Truth not known." : !p.signal ? "Normal (nothing planted)" : p.kind === "shift" ? "Signal: every neutrophil " + Math.round(p.drop * 100) + "% less granular" :
+      "Signal: " + Math.round(p.frac * 100) + "% of neutrophils " + Math.round(p.drop * 100) + "% less granular (" + p.kind + ")";
+    $("lscore").innerHTML = "<h3>Detector scores (0 to 100)</h3><div style=\"display:grid;gap:10px;margin-top:12px\">" + bar("Report averages", p.score_report, "var(--s2)") + bar("Full cell data", p.score_cells, "var(--s1)") + "</div>" + (p.warnings && p.warnings.length ? '<p style="margin-top:12px;padding:8px 10px;border-left:4px solid var(--warn);background:var(--wash)"><b>Warning.</b> ' + p.warnings.join(" ") + "</p>" : "") +
+      '<p style="margin-top:14px"><b>Truth:</b> ' + truth + '</p><p class="cap" style="margin-top:6px">' + p.neutrophils + (p.upload ? " cells look like neutrophils (auto-gate). Scored in " : " neutrophils; " + p.planted + " planted. Noise: " + p.noise + ". Patient number " + p.seed + ". Scored in ") + p.ms + ' ms.</p>' +
+      '<p class="cap" style="margin-top:10px">' + p.note + "</p>";
+  }
+  function drawReport(fid) {
+    $("repPdf").setAttribute("href", "/api/report/" + fid + "/pdf");
+    fetch("/api/report/" + fid).then(function (r) { return r.json(); }).then(function (L) {
+      var W = L.page[0], H = L.page[1], s = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" style="min-width:720px;display:block" role="img" aria-label="Synthetic lab result sheet"><rect width="' + W + '" height="' + H + '" fill="#ffffff"/>';
+      function esc(x) { return String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+      L.items.forEach(function (it) {
+        if (it.t === "rect") s += '<rect x="' + it.x + '" y="' + it.y + '" width="' + it.w + '" height="' + it.h + '" fill="' + it.fill + '"' + (it.stroke ? ' stroke="' + it.stroke + '" stroke-width="0.75"' : "") + "/>";
+        else s += '<text x="' + it.x + '" y="' + it.y + '" text-anchor="' + it.anchor + '" style="font-family:\'Courier New\',Courier,monospace;font-size:' + it.size + 'px;fill:' + it.color + ';white-space:pre;font-weight:400" xml:space="preserve">' + esc(it.s) + "</text>";
+      });
+      $("rep").innerHTML = s + "</svg>";
+    });
+  }
+  function live() {
+    var busy = false;
+    function lock(on, msg) { busy = on; $("lgo").disabled = on; $("lup").disabled = on; $("lstatus").textContent = msg || ""; }
+    function present(p) {
+      LP = p; paintLive(); showScores(p); $("lstatus").textContent = "Asking Qwen to explain...";
+      return fetch("/api/explain", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ facts_id: p.facts_id }) })
+        .then(function (r) { return r.json(); })
+        .then(function (e) {
+          $("lexpl").textContent = e.text;
+          $("lsrc").textContent = e.source === "template" ? "Fixed template sentence (" + e.reason + ")." : "Written by " + e.source + " in " + (e.ms / 1000).toFixed(1) + " s. Every number was checked against the scores.";
+          lock(false, ""); drawReport(p.facts_id); $("lask").setAttribute("href", "/chat?p=" + p.facts_id);
+        });
+    }
+    function fail(err) { lock(false, err.message); $("lexpl").textContent = ""; }
+    function post(url, body) {
+      return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(typeof j.detail === "string" ? j.detail : "request failed (" + r.status + ")"); return j; }); });
+    }
+    function exampleLink() {
+      var sig = rv("lsig") === "1";
+      $("lex").setAttribute("href", "/api/example.csv?kind=" + rv("lkind") + "&frac=" + (+rv("lfrac") / 100) + "&drop=" + (+rv("ldrop") / 100) + "&noise=" + rv("lnoise") + "&seed=" + (+$("lseed").value) + "&signal=" + sig);
+    }
+    function go() {
+      if (busy) return; lock(true, "Making and scoring a patient..."); $("lexpl").textContent = "..."; $("lsrc").textContent = "";
+      post("/api/patient", { kind: rv("lkind"), frac: +rv("lfrac") / 100, drop: +rv("ldrop") / 100, noise: rv("lnoise"), seed: +$("lseed").value, signal: rv("lsig") === "1" }).then(present).catch(fail);
+    }
+    function scoreFile() {
+      var f = $("lfile").files[0];
+      if (busy) return;
+      if (!f) { $("lstatus").textContent = "Choose a CSV file first."; return; }
+      if (f.size > 6000000) { $("lstatus").textContent = "That file is too large (limit about 6 MB)."; return; }
+      lock(true, "Reading and scoring " + f.name + "..."); $("lexpl").textContent = "..."; $("lsrc").textContent = "";
+      f.text().then(function (txt) { return post("/api/upload", { filename: f.name, csv: txt }); }).then(present).catch(fail);
+    }
+    $("lgo").addEventListener("click", go);
+    $("lfile").addEventListener("change", function () { if ($("lfile").files[0]) scoreFile(); });      // choosing a file scores that file straight away
+    $("lup").addEventListener("click", scoreFile);
+    $("lnext").addEventListener("click", function () { $("lseed").value = +$("lseed").value + 1; exampleLink(); go(); });
+    $("lheat").addEventListener("change", paintLive);
+    Array.prototype.forEach.call(document.querySelectorAll('input[name^="l"],#lseed'), function (el) { el.addEventListener("change", exampleLink); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="lsig"],input[name="lkind"]'), function (el) { el.addEventListener("change", function () {
+      var sig = rv("lsig") === "1", k = rv("lkind");
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="lkind"],input[name="lfrac"],input[name="ldrop"]'), function (x) { x.disabled = !sig; });
+      if (sig) Array.prototype.forEach.call(document.querySelectorAll('input[name="lfrac"]'), function (x) { x.disabled = k === "shift"; });
+    }); });
+    exampleLink(); go();
+  }
+    /* ---------- wiring ---------- */
+  function refresh() {
+    $("famHint").textContent = FAM[st.fam].hint; $("typeHint").textContent = TYPE_HINT[st.type];
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="drop"]'), function (el) { el.disabled = st.type !== "subgroup"; });
+    drawChart(); drawLimits(); drawClaim();
+  }
+  ["fam", "type", "drop", "noise"].forEach(function (n) {
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="' + n + '"]'), function (el) {
+      el.addEventListener("change", function () { st[n] = n === "drop" ? +el.value : el.value; refresh(); });
+    });
+  });
+  $("rich").addEventListener("change", function () { st.rich = this.checked; refresh(); });
+  ["cType", "cFrac", "cDrop"].forEach(function (id) { $(id).addEventListener("change", drawClaim); });
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", paintLive);
+  new MutationObserver(paintLive).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  refresh(); live();
+})();
+</script>

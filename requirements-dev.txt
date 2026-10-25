@@ -1,0 +1,4 @@
+# Extra tools for development: running the tests and reading the PDF documents.
+-r requirements.txt
+pytest==8.4.2
+pypdf==6.21.2

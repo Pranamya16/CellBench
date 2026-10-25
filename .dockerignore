@@ -1,0 +1,14 @@
+.venv
+archive
+data/synthetic
+data/pilot
+data/reference
+data/confirm_parts
+data/results
+**/__pycache__
+*.pdf
+*.pptx
+*.ipynb
+demo_uploads
+demo_uploads_answer_key
+demo_uploads_pick

@@ -1,0 +1,99 @@
+{
+  "events_per_patient": 2000,
+  "link": {
+    "sfl": 0.5,
+    "fsc": 0.5
+  },
+  "noise_sizes": {
+    "independent_sd": 0.05,
+    "shared_sd": 0.049,
+    "shared_residual_sd": 0.01
+  },
+  "noise_presets": {
+    "independent": {
+      "kind": "independent",
+      "background_dysplasia": true
+    },
+    "shared": {
+      "kind": "shared",
+      "background_dysplasia": true
+    },
+    "independent_clean": {
+      "kind": "independent",
+      "background_dysplasia": false
+    },
+    "shared_clean": {
+      "kind": "shared",
+      "background_dysplasia": false
+    }
+  },
+  "background_dysplasia": {
+    "carrier_share": 0.5,
+    "max_fraction": 0.02,
+    "shift_size": 0.1
+  },
+  "neutropenia": {
+    "enabled": false,
+    "relative_reduction": 0.3
+  },
+  "grid": {
+    "noise": [
+      "independent",
+      "shared"
+    ],
+    "types": {
+      "subgroup": {
+        "fractions": [
+          0.02,
+          0.05,
+          0.1,
+          0.2
+        ],
+        "sizes": [
+          0.05,
+          0.1,
+          0.2
+        ]
+      },
+      "spread": {
+        "fractions": [
+          0.02,
+          0.05,
+          0.1,
+          0.2
+        ],
+        "sizes": [
+          0.1
+        ]
+      },
+      "shift": {
+        "fractions": [
+          1.0
+        ],
+        "sizes": [
+          0.1
+        ]
+      }
+    }
+  },
+  "plans": {
+    "full": {
+      "seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "patients_per_group": 300
+    },
+    "budget": {
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "patients_per_group": 200
+    }
+  }
+}

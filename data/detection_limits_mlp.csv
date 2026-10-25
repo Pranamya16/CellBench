@@ -1,0 +1,25 @@
+noise,type,drop,view,limit
+shared,spread,10%,Report summary,not reached by 20%
+shared,spread,10%,Rich summary,10%
+shared,spread,10%,Full per-cell maps,not reached by 20%
+shared,subgroup,5%,Report summary,not reached by 20%
+shared,subgroup,5%,Rich summary,not reached by 20%
+shared,subgroup,5%,Full per-cell maps,not reached by 20%
+shared,subgroup,10%,Report summary,not reached by 20%
+shared,subgroup,10%,Rich summary,10%
+shared,subgroup,10%,Full per-cell maps,20%
+shared,subgroup,20%,Report summary,10%
+shared,subgroup,20%,Rich summary,2%
+shared,subgroup,20%,Full per-cell maps,5%
+independent,spread,10%,Report summary,not reached by 20%
+independent,spread,10%,Rich summary,20%
+independent,spread,10%,Full per-cell maps,not reached by 20%
+independent,subgroup,5%,Report summary,not reached by 20%
+independent,subgroup,5%,Rich summary,not reached by 20%
+independent,subgroup,5%,Full per-cell maps,not reached by 20%
+independent,subgroup,10%,Report summary,not reached by 20%
+independent,subgroup,10%,Rich summary,20%
+independent,subgroup,10%,Full per-cell maps,not reached by 20%
+independent,subgroup,20%,Report summary,20%
+independent,subgroup,20%,Rich summary,5%
+independent,subgroup,20%,Full per-cell maps,5%

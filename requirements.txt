@@ -1,0 +1,10 @@
+# CellBench runtime dependencies. Pinned to the versions the data, tests and final models were produced with.
+# Tested with Python 3.9.6 (local, torch 2.8.0). The Kaggle runs used Python 3.13 and torch 2.11.0, and matched the
+# local results to within 0.005 AUROC; they are not pinned here.
+numpy==2.0.2
+pandas==2.3.3
+scipy==1.13.1
+scikit-learn==1.6.1
+joblib==1.5.3
+torch==2.8.0
+matplotlib==3.9.4

@@ -1,0 +1,11 @@
+signal_type,affected_fraction,shift_size,noise,seed,patients_per_group,cohort_id
+none,0.0,0.0,independent,1,300,pilot_none_f000_d00_independent
+subgroup,0.1,0.1,independent,1,300,pilot_subgroup_f010_d10_independent
+subgroup,0.2,0.2,independent,1,300,pilot_subgroup_f020_d20_independent
+shift,1.0,0.1,independent,1,300,pilot_shift_f100_d10_independent
+spread,0.2,0.1,independent,1,300,pilot_spread_f020_d10_independent
+none,0.0,0.0,shared,1,300,pilot_none_f000_d00_shared
+subgroup,0.1,0.1,shared,1,300,pilot_subgroup_f010_d10_shared
+subgroup,0.2,0.2,shared,1,300,pilot_subgroup_f020_d20_shared
+shift,1.0,0.1,shared,1,300,pilot_shift_f100_d10_shared
+spread,0.2,0.1,shared,1,300,pilot_spread_f020_d10_shared

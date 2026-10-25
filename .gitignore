@@ -1,0 +1,23 @@
+# data is rebuilt from code and seeds; never commit it
+data/cohorts/
+data/synthetic/cohorts/
+data/reference/
+data/confirm_parts/
+data/pilot/pilot_*/
+data/pilot/demo_cohort_cells.csv
+demo_uploads/
+demo_uploads_answer_key/
+archive/
+*.npy
+*.npz
+*.pkl
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store
+01_generate_sysmex_colab.ipynb
+.claude/
+revised point 6
+Data_creation.pdf
+Data_creation_revised.pdf
+CellBench-Hackathon-Pitch.pptx

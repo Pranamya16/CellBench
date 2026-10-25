@@ -1,0 +1,33 @@
+case,option,auroc,seconds
+easy: subgroup 20% / 20%,report_LR,0.968,0.0
+easy: subgroup 20% / 20%,report_GB,0.923,0.5
+easy: subgroup 20% / 20%,rich_GB,1.0,0.2
+easy: subgroup 20% / 20%,cells_hist_GB,0.999,3.8
+easy: subgroup 20% / 20%,cells_hist_LR,0.995,0.0
+easy: subgroup 20% / 20%,cells_MIL_GB,0.982,0.9
+easy: subgroup 20% / 20%,cells_CNN,1.0,9.7
+easy: subgroup 20% / 20%,cells_DeepSets,0.766,4.1
+medium: subgroup 10% / 10%,report_LR,0.59,0.0
+medium: subgroup 10% / 10%,report_GB,0.614,0.4
+medium: subgroup 10% / 10%,rich_GB,0.991,0.5
+medium: subgroup 10% / 10%,cells_hist_GB,0.848,3.6
+medium: subgroup 10% / 10%,cells_hist_LR,0.742,0.0
+medium: subgroup 10% / 10%,cells_MIL_GB,0.493,0.4
+medium: subgroup 10% / 10%,cells_CNN,0.907,7.5
+medium: subgroup 10% / 10%,cells_DeepSets,0.501,4.1
+spread 20% / 10%,report_LR,0.543,0.0
+spread 20% / 10%,report_GB,0.551,0.4
+spread 20% / 10%,rich_GB,0.999,0.6
+spread 20% / 10%,cells_hist_GB,0.924,3.6
+spread 20% / 10%,cells_hist_LR,0.81,0.0
+spread 20% / 10%,cells_MIL_GB,0.607,0.5
+spread 20% / 10%,cells_CNN,0.976,7.5
+spread 20% / 10%,cells_DeepSets,0.507,4.1
+null: 0% (must be about 0.5),report_LR,0.543,0.0
+null: 0% (must be about 0.5),report_GB,0.555,0.4
+null: 0% (must be about 0.5),rich_GB,0.45,0.5
+null: 0% (must be about 0.5),cells_hist_GB,0.493,3.6
+null: 0% (must be about 0.5),cells_hist_LR,0.547,0.0
+null: 0% (must be about 0.5),cells_MIL_GB,0.518,0.5
+null: 0% (must be about 0.5),cells_CNN,0.485,7.5
+null: 0% (must be about 0.5),cells_DeepSets,0.506,4.1

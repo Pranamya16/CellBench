@@ -1,0 +1,74 @@
+<title>CellBench Ask</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+__STYLE__
+<style>
+.chatwrap { max-width: 820px; margin: 0 auto; }
+.log { display: grid; gap: 14px; min-height: 280px; max-height: 58vh; overflow-y: auto; padding: 4px 2px 8px; }
+.msg { max-width: 92%; padding: 10px 13px; border-radius: 10px; font-size: 15px; line-height: 1.5; }
+.msg.user { justify-self: end; background: var(--ink); color: var(--bg); border-bottom-right-radius: 3px; }
+.msg.bot { justify-self: start; background: var(--wash); border-bottom-left-radius: 3px; }
+.meta { font-size: 12px; color: var(--ink2); margin-top: 6px; }
+.src { font-size: 12px; color: var(--ink2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.src b { color: var(--ink); font-weight: 600; }
+.askrow { display: flex; gap: 8px; margin-top: 12px; }
+.askrow input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink); }
+.askrow button { font: inherit; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); cursor: pointer; }
+.askrow button:disabled { opacity: .5; cursor: wait; }
+.askrow input:focus-visible, .askrow button:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.badge2 { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 7px; border: 1px solid var(--axis); border-radius: 4px; margin-right: 6px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">CellBench <span>ask the demo</span></div>
+    <div class="row"><a class="chip" href="/" style="text-decoration:none">Back to the live demo</a></div>
+  </header>
+  <section class="sec chatwrap" style="border-top:0">
+    <h2>Ask about the project</h2>
+    <p class="lead">Answers come only from our own project notes (data, models, results and limits) and are checked before they are shown. Each answer lists the notes it used. I can't give medical advice or a diagnosis: this is a research demo on made-up data.</p>
+    <div class="panel">
+      <div class="chips" id="chips" role="group" aria-label="Example questions"></div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <form class="askrow" id="form" autocomplete="off">
+        <input id="q" type="text" maxlength="300" placeholder="Ask a question, for example: why is a 5% drop not detected?" aria-label="Your question">
+        <button id="send" type="submit">Ask</button>
+      </form>
+      <p class="cap" style="margin-top:8px">Answers are written by Qwen 2.5 (3B) running on this machine, from our own project notes, and the notes used are shown. If the model is unavailable you see the note itself. Medical questions and anything outside the project are declined.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fid = new URLSearchParams(location.search).get("p") || "";
+  var EX = ["Explain the results in simple words", "What is the main result?", "What does AUROC mean?", "Why is a 5% drop not detected?", "How was the synthetic data made?", "What are the limitations?", "Is this a diagnostic tool?", "What does the detector score mean?", "Can I upload my own file?"];
+  if (fid) EX.unshift("What did the models say about the patient I just scored?");
+  function add(cls, text) { var d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; return d; }
+  var HIST = [];
+  function ask(q) {
+    q = (q || $("q").value).trim(); if (!q) return;
+    add("user", q); $("q").value = ""; $("send").disabled = true;
+    var wait = add("bot", "...");
+    fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: q, facts_id: fid, history: HIST.slice(-6) }) })
+      .then(function (r) { if (!r.ok) throw new Error("server " + r.status); return r.json(); })
+      .then(function (a) {
+        wait.textContent = a.answer; HIST.push({ role: "user", content: q }, { role: "assistant", content: a.answer });
+        var tag = { llm: "Written by Qwen 2.5 from the project notes", qwen: "Written by Qwen 2.5, checked", note: "Shown from the project notes", refusal: "Not answered: medical question", unknown: "No matching note", outofscope: "Not answered: outside the project" }[a.source] || a.source;
+        var m = document.createElement("div"); m.className = "meta"; var b = document.createElement("span"); b.className = "badge2"; b.textContent = tag; m.appendChild(b); m.appendChild(document.createTextNode((a.ms / 1000).toFixed(1) + " s")); wait.appendChild(m);
+        if (a.notes && a.notes.length) {
+          var s = document.createElement("div"); s.className = "src";
+          s.innerHTML = ""; var l = document.createElement("b"); l.textContent = "Based on: "; s.appendChild(l); s.appendChild(document.createTextNode(a.notes.join("; ")));
+          if (a.note_text && a.source !== "note") { var n = document.createElement("div"); n.style.marginTop = "4px"; n.textContent = "From the notes: " + a.note_text; s.appendChild(n); }
+          wait.appendChild(s);
+        }
+      })
+      .catch(function (e) { wait.textContent = "Could not reach the server (" + e.message + ")."; })
+      .then(function () { $("send").disabled = false; $("q").focus(); $("log").scrollTop = $("log").scrollHeight; });
+  }
+  EX.forEach(function (q) { var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = q; b.addEventListener("click", function () { ask(q); }); $("chips").appendChild(b); });
+  $("form").addEventListener("submit", function (ev) { ev.preventDefault(); ask(); });
+  add("bot", fid ? "Hi. Ask me about the project, or about the patient you just scored." : "Hi. Ask me about the project: its data, models, results or limits.");
+})();
+</script>
