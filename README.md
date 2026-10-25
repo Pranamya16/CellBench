@@ -94,11 +94,13 @@ The synthetic data is not stored in this repository; it is rebuilt exactly from 
 - Higher cell counts and more compute could improve detection of weak signatures. We have not tested that.
 
 ## Why this could matter (and what it would take)
-Routine blood tests already produce this per-cell data. If it were retained and linked to clinical outcomes in an integrated digital record, such as the data system envisaged in the NHS 10 Year Health Plan, it would be a very large resource for training and testing detection models, potentially for earlier identification of some conditions. A synthetic generator lets teams find out what is detectable, and which data to ask for, before any real patient data is used. Moving from here to clinical use would need real analyser data, ethics approval, and clinical validation, none of which this project has.
+Routine blood tests already produce this per-cell data. If it were retained and linked to clinical outcomes in an integrated digital record, such as the data system envisaged in the NHS 10 Year Health Plan, it would be a very large resource for training and testing detection models, potentially for earlier identification of some conditions. See [Real_World_Applications](Real_World_Applications) for how CellBench could fit the NHS 10 Year Health Plan, how it could be used today with Trusts, and the UK GDPR pathways involved. A synthetic generator lets teams find out what is detectable, and which data to ask for, before any real patient data is used. Moving from here to clinical use would need real analyser data, ethics approval, and clinical validation, none of which this project has.
 
 ## AI tools used (disclosure)
 Code, analysis and documentation were written with **Claude Code** (Anthropic). Plain-language explanations in the demo are written by **Qwen 2.5** (Alibaba), and chat note search uses **nomic-embed-text**, all run locally through Ollama. Models were trained on Kaggle. Pre-existing work: the public example files and the characterisation repository https://github.com/SOwenLU/sysmex-xn-fcs.
 
 ## Credits and citation
 - Reference data: Ai T, Tabe Y, Takemura H, Kimura K, Takahashi T, Yang H, Tsuchiya K, Konishi A, Uchihashi K, Horii T, Ohsaka A. *Novel flowcytometry-based approach of malignant cell detection in body fluids using an automated hematology analyzer.* PLOS ONE 2018; 13(2): e0190886 (CC BY).
-- Team: Pranamya Deshpande ([@Pranamya16](https://github.com/Pranamya16)); other team members to be added. Licence: [MIT](LICENSE).
+- **Team (Leeds AI Society hackathon, October 2026):** Pranamya Deshpande ([@Pranamya16](https://github.com/Pranamya16)), Kanishq Gandharv, Samuel Owen, Matthew Romero.
+- Real-world applications and regulation notes: [Real_World_Applications](Real_World_Applications).
+- Licence: [MIT](LICENSE).
