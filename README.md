@@ -101,6 +101,6 @@ Code, analysis and documentation were written with **Claude Code** (Anthropic). 
 
 ## Credits and citation
 - Reference data: Ai T, Tabe Y, Takemura H, Kimura K, Takahashi T, Yang H, Tsuchiya K, Konishi A, Uchihashi K, Horii T, Ohsaka A. *Novel flowcytometry-based approach of malignant cell detection in body fluids using an automated hematology analyzer.* PLOS ONE 2018; 13(2): e0190886 (CC BY).
-- **Team (Leeds AI Society hackathon, October 2026):** Pranamya Deshpande ([@Pranamya16](https://github.com/Pranamya16)), Kanishq Gandharv, Samuel Owen, Matthew Romero.
+- **Team (Leeds AI Society hackathon, October 2026):** Pranamya Deshpande ([@Pranamya16](https://github.com/Pranamya16)), Kanishq Gandharv ([KanishqGandharv219](https://github.com/KanishqGandharv219)), Samuel Owen, Matthew Romero.
 - Real-world applications and regulation notes: [Real_World_Applications](Real_World_Applications).
 - Licence: [MIT](LICENSE).
